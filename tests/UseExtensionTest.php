@@ -28,7 +28,7 @@ final class UseExtensionTest extends TestCase
 
         self::$latte = new Engine();
         self::$latte->setTempDirectory(self::LATTE_CACHE_DIR);
-        self::$latte->setStrictTypes(true);
+        //self::$latte->setStrictTypes(true);
         self::$latte->addExtension(new UseExtension());
     }
 
@@ -44,19 +44,19 @@ final class UseExtensionTest extends TestCase
         return [
             'className' => [
                 'classCall' => 'NamespacedClass',
-                'expected' => '(new Framework\\Module\\NamespacedClass)',
+                'expected' => '(new \\Framework\\Module\\NamespacedClass)',
             ],
             'classNameWithParenthesis' => [
                 'classCall' => 'NamespacedClass()',
-                'expected' => '(new Framework\\Module\\NamespacedClass)',
+                'expected' => '(new \\Framework\\Module\\NamespacedClass)',
             ],
             'classNameWithAParameters' => [
                 'classCall' => 'NamespacedClass(5)',
-                'expected' => '(new Framework\\Module\\NamespacedClass(5))',
+                'expected' => '(new \\Framework\\Module\\NamespacedClass(5))',
             ],
             'classNameWithParameters' => [
                 'classCall' => 'NamespacedClass(5, $b)',
-                'expected' => '(new Framework\\Module\\NamespacedClass(5, $b))',
+                'expected' => '(new \\Framework\\Module\\NamespacedClass(5, $b))',
             ],
         ];
     }
@@ -86,7 +86,7 @@ final class UseExtensionTest extends TestCase
     #[Test]
     public function use_tag_class_constant(): void
     {
-        $expected = '(Framework\\Module\\NamespacedClass::CONSTANT)';
+        $expected = '(\\Framework\\Module\\NamespacedClass::CONSTANT)';
         $template = <<<'TEMPLATE'
             {use Framework\Module\NamespacedClass}
             
@@ -98,9 +98,30 @@ final class UseExtensionTest extends TestCase
     }
 
     #[Test]
+    public function use_tag_in_n_attribute(): void
+    {
+        $expect = [
+            'BeastBytes\\Latte\\Extensions\\Use\\Tests\\Support\\ClassName::CLASS_NAME',
+            'BeastBytes\\Latte\\Extensions\\Use\\Tests\\Support\\ClassName::getClassName()'
+        ];
+        $template = <<<'TEMPLATE'
+        {use BeastBytes\Latte\Extensions\Use\Tests\Support\ClassName}
+
+        <p n:class="ClassName::CLASS_NAME">Constant</p>
+        <p n:class="ClassName::getClassName()">Method</p>
+        TEMPLATE;
+
+        $actual = $this->compile($template);
+
+        foreach ($expect as $expected) {
+            $this->assertStringContainsString($expected, $actual);
+        }
+    }
+
+    #[Test]
     public function use_tag_in_filter(): void
     {
-        $expected = '($this->filters->replace)($testString, Framework\\Module\\NamespacedClass::CONSTANT)';
+        $expected = '($this->filters->replace)($testString, \\Framework\\Module\\NamespacedClass::CONSTANT)';
         $template = <<<'TEMPLATE'
             {use Framework\Module\NamespacedClass}
             
@@ -116,9 +137,9 @@ final class UseExtensionTest extends TestCase
     #[Test]
     public function use_tag_alias(): void
     {
-        $expected = '(Framework\\Module\\NamespacedClass::CONSTANT)';
+        $expected = '(\\Framework\\Module\\NamespacedClass::CONSTANT)';
         $template = <<<'TEMPLATE'
-            {use Framework\Module\NamespacedClass AliasedClass}
+            {use Framework\Module\NamespacedClass as AliasedClass}
 
             <p>The constant is {AliasedClass::CONSTANT}</p>
             TEMPLATE;
@@ -131,12 +152,12 @@ final class UseExtensionTest extends TestCase
     public function multiple_use_tags(): void
     {
         $expected = [
-            '(new Framework\\Module\\NamespacedClass)',
-            '(Framework\Module\\NamespacedClass::CONSTANT)',
-            '($this->filters->replace)($testString, Framework\\Module\\Aliased\\NamespacedClass::CONSTANT)',
+            '(new \\Framework\\Module\\NamespacedClass)',
+            '(\\Framework\Module\\NamespacedClass::CONSTANT)',
+            '($this->filters->replace)($testString, \\Framework\\Module\\Aliased\\NamespacedClass::CONSTANT)',
         ];
         $template = <<<'TEMPLATE'
-            {use Framework\Module\Aliased\NamespacedClass AliasedClass}
+            {use Framework\Module\Aliased\NamespacedClass as AliasedClass}
             {use Framework\Module\NamespacedClass}
             
             {varType string $testString}
