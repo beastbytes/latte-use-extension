@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BeastBytes\Latte\Extensions\Use\Nodes;
 
 use Generator;
+use Latte\CompileException;
 use Latte\Compiler\Nodes\AreaNode;
 use Latte\Compiler\Nodes\NopNode;
 use Latte\Compiler\Nodes\TextNode;
@@ -14,6 +15,8 @@ use Latte\Compiler\Token;
 
 class UseNode extends AreaNode
 {
+    private const AS = 'as';
+
     public NopNode|TextNode $alias;
     public NopNode|TextNode $fqcn;
 
@@ -24,8 +27,29 @@ class UseNode extends AreaNode
         $stream = $tag->parser->stream;
 
         $node->fqcn = new TextNode($stream->consume(Token::Php_NameQualified)->text);
-        $alias = $stream->tryConsume(Token::Php_Identifier);
-        $node->alias = $alias instanceof Token ? new TextNode($alias->text) : new NopNode();
+
+        $as = $stream->tryConsume(Token::Php_Identifier);
+        if ($as instanceof Token) {
+            if ($as->text !== self::AS) {
+                throw new CompileException(sprintf(
+                    "Syntax error: expected '%s' clause",
+                    self::AS
+                ));
+            }
+
+            $alias = $stream->tryConsume(Token::Php_Identifier);
+
+            if (!$alias instanceof Token) {
+                throw new CompileException(sprintf(
+                    "Syntax error: expected identifier for '%s' clause",
+                    self::AS
+                ));
+            }
+
+            $node->alias = new TextNode($alias->text);
+        } else {
+            $node->alias = new NopNode();
+        }
 
         return $node;
     }

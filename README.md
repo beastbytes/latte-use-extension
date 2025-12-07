@@ -31,13 +31,12 @@ $engine->addExtension(new UseExtension());
 
 ## Usage
 The FQCN must be defined in a `{use}` tag before the base class name or alias is referenced in the template.
-The best way to ensure this is to place `{use}` tags at the start of the template.
+The best way to ensure this is to place `{use}` tags as near to the start of the template as possible.
 
 The extension replaces the alias or base class name defined in the `use` tag with the FQCN in class instantation (`new`)
 statements and class constants during compilation; it _does not_ import or alias the class.
 
 #### Differences from PHP
-* There is no `as` clause when defining an alias
 * Group `use` definitions are _not_ supported.
 
 #### {use} Tag
@@ -50,7 +49,7 @@ statements and class constants during compilation; it _does not_ import or alias
 
 #### {use} Tag with Alias
 ```latte
-{use Framework\Module\Aliased\NamespacedClass AliasedClass}
+{use Framework\Module\Aliased\NamespacedClass as AliasedClass}
 
 <p>The value is {(new AliasedClass)->getValue()}</p>
 <p>The constant is {AliasedClass::CONSTANT}</p>
@@ -58,7 +57,7 @@ statements and class constants during compilation; it _does not_ import or alias
 
 #### Multiple {use} Tags
 ```latte
-{use Framework\Module\Aliased\NamespacedClass AliasedClass}
+{use Framework\Module\Aliased\NamespacedClass as AliasedClass}
 {use Framework\Module\NamespacedClass}
 
 {varType int $arg}

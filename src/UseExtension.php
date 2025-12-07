@@ -8,6 +8,8 @@ use BeastBytes\Latte\Extensions\Use\Nodes\UseNode;
 use Latte\Compiler\Node;
 use Latte\Compiler\Nodes\Php\Expression\ClassConstantFetchNode;
 use Latte\Compiler\Nodes\Php\Expression\NewNode;
+use Latte\Compiler\Nodes\Php\Expression\StaticMethodCallNode;
+use Latte\Compiler\Nodes\Php\Expression\StaticPropertyFetchNode;
 use Latte\Compiler\Nodes\TemplateNode;
 use Latte\Compiler\Nodes\TextNode;
 use Latte\Compiler\NodeTraverser;
@@ -37,7 +39,7 @@ final class UseExtension extends Extension
             $templateNode,
             enter: function (Node $node): void {
                 if ($node instanceof UseNode) {
-                    $fqcn = '\\' . $node->fqcn->content;
+                    $fqcn = $node->fqcn->content;
 
                     if ($node->alias instanceof TextNode) {
                         $resolved = $node->alias->content;
@@ -47,10 +49,15 @@ final class UseExtension extends Extension
 
                     $this->use[$resolved] = $fqcn;
                 } elseif (
-                    ($node instanceof ClassConstantFetchNode || $node instanceof NewNode)
+                    (
+                        $node instanceof ClassConstantFetchNode
+                        || $node instanceof NewNode
+                        || $node instanceof StaticMethodCallNode
+                        || $node instanceof StaticPropertyFetchNode
+                    )
                     && in_array($node->class->name, array_keys($this->use), true)
                 ) {
-                    $node->class->name = $this->use[$node->class->name];
+                    $node->class->name = '\\' . $this->use[$node->class->name];
                 }
             },
         );
